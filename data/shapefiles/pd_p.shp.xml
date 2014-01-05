@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xml:lang="en"><Esri><CreaDate>20110308</CreaDate><CreaTime>15131000</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce><DataProperties><lineage><Process ToolSource="D:\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Data Management Tools.tbx\DeleteField" Date="20110308" Time="151310">DeleteField pd_p OBJECTID;CHNG_TYP;NEW_POINT</Process></lineage></DataProperties></Esri></metadata>
