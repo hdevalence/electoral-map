@@ -143,6 +143,6 @@ def process_poll(cur, fed_num, emrp_name):
     nonvotes = electors - sum((x for x in votetotals if x))
     add_to_column(cur, fed_num, emrp_name, 'nonvotes', nonvotes)
 
-
-
+    # Commit changes
+    cur.connection.commit()
 
