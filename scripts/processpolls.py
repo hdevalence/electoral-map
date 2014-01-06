@@ -27,16 +27,22 @@ def create_cleanpoll():
                                           );""")
     conn.commit()
 
-def add_votes(cur, fednum, emrp_name, party, votes):
-    """Updates cleanpoll vote totals."""
-    if not votes:
+def add_to_column(cur, fednum, emrp_name, column, value):
+    """
+    Adds 'value' to 'column' in cleanpoll table.
+
+    Note: This function uses the column parameter to build the query.
+    Only call it with known inputs.
+    """
+    if not value:
         return
-    # SQL injection: use party as column name
-    query = "UPDATE cleanpoll SET " + party + " = " + party + " + %(votes)s WHERE fednum = %(fednum)s AND emrp_name = %(emrp_name)s;"
+    # SQL injection: use column as column name
+    query = "UPDATE cleanpoll SET " + column + " = " + column + \
+            " + %(value)s WHERE fednum = %(fednum)s AND emrp_name = %(emrp_name)s;"
     cur.execute(query,
                 { 'fednum' : fednum
-                , 'party' : party
-                , 'votes' : votes
+                , 'column' : column
+                , 'value' : value
                 , 'emrp_name' : emrp_name
                 })
 
@@ -89,7 +95,7 @@ def process_poll(cur, fednum, emrp_name):
                     , 'partypattern' : partypattern
                     })
         partyvotes, = cur.fetchone()
-        add_votes(cur, fednum, emrp_name, party, partyvotes)
+        add_to_column(cur, fednum, emrp_name, party, partyvotes)
         votetotals.append(partyvotes)
 
     # Find the number of votes for independent candidates.
@@ -107,7 +113,7 @@ def process_poll(cur, fednum, emrp_name):
                            )
                    ;""", params)
     othervotes, = cur.fetchone()
-    add_votes(cur, fednum, emrp_name, 'othvotes', othervotes)
+    add_to_column(cur, fednum, emrp_name, 'othvotes', othervotes)
     votetotals.append(othervotes)
 
     # Count electors
@@ -117,11 +123,11 @@ def process_poll(cur, fednum, emrp_name):
                    ) AS rows;""",
                 params);
     electors, = cur.fetchone()
-    add_votes(cur, fednum, emrp_name, 'electors', electors)
+    add_to_column(cur, fednum, emrp_name, 'electors', electors)
 
     # Calculate nonvoters
-    nonvotes = electors - sum(votetotals)
-    add_votes(cur, fednum, emrp_name, 'nonvotes', nonvotes)
+    nonvotes = electors - sum((x for x in votetotals if x))
+    add_to_column(cur, fednum, emrp_name, 'nonvotes', nonvotes)
 
 
 
