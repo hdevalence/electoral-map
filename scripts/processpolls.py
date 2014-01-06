@@ -146,3 +146,18 @@ def process_poll(cur, fed_num, emrp_name):
     # Commit changes
     cur.connection.commit()
 
+def process_all_polls():
+    """
+    Map process_polls over all needed values from the shapefiles
+    to get the cleaned data
+    """
+    cur = conn.cursor()
+    cur.execute("""SELECT fed_num, emrp_name FROM pd_a;""")
+    polls = cur.fetchall()
+    cur.execute("""SELECT fed_num, emrp_name FROM pd_p;""")
+    polls += cur.fetchall()
+    print(len(polls))
+    for fed_num, emrp_name in polls:
+        process_poll(cur, fed_num, emrp_name)
+
+
