@@ -55,12 +55,12 @@ def get_psnums(cur, fed_num, emrp_name):
                    AND NOT voidpoll
                    AND NOT nopoll
                    AND (   (   mergewith = ''
-                           AND (psnum = %(psnum)s OR psnum LIKE %(psnum_letter)s)
+                           AND (psnum = %(psnum)s OR psnum SIMILAR TO %(psnum_letter)s)
                            )
-                       OR  mergewith = %(psnum)s OR mergewith LIKE %(psnum_letter)s
+                       OR  mergewith = %(psnum)s OR mergewith SIMILAR TO %(psnum_letter)s
                        );""",
                 { 'psnum' : emrp_name
-                , 'psnum_letter' : emrp_name + '_' # Matches, e.g., '26A'
+                , 'psnum_letter' : emrp_name + '[A-Z]' # Matches, e.g., '26A'
                 , 'fed_num' : fed_num
                 })
     return cur.fetchone()[0]
