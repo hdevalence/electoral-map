@@ -335,3 +335,6 @@ CREATE TABLE pollresults ( ednum integer
 \COPY pollresults FROM 'data/pollresults/pollresults_resultatsbureau61001.csv' CSV HEADER;
 \COPY pollresults FROM 'data/pollresults/pollresults_resultatsbureau62001.csv' CSV HEADER;
 
+-- Remove spaces from poll numbers, avoiding normalization issues
+UPDATE pollresults SET psnum     = trim(both ' ' from psnum)
+                     , mergewith = trim(both ' ' from mergewith);
