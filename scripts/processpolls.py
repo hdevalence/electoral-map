@@ -13,8 +13,8 @@ def create_cleanpoll():
     """
     cur = conn.cursor()
     cur.execute("""CREATE TABLE cleanpoll ( fed_num integer
-                                          , emrp_name character varying(31)
-                                          , pollname  character varying(1023)
+                                          , emrp_name character varying(12)
+                                          , pollname  character varying(127)
                                           , electors integer DEFAULT 0
                                           , libvotes integer DEFAULT 0
                                           , convotes integer DEFAULT 0
