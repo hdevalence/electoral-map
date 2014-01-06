@@ -12,7 +12,7 @@ def create_cleanpoll():
     Creates a new table called cleanpoll for cleaned polling data.
     """
     cur = conn.cursor()
-    cur.execute("""CREATE TABLE cleanpoll ( fednum integer
+    cur.execute("""CREATE TABLE cleanpoll ( fed_num integer
                                           , emrp_name character varying(31)
                                           , pollname  character varying(255)
                                           , valid boolean DEFAULT False
@@ -27,7 +27,7 @@ def create_cleanpoll():
                                           );""")
     conn.commit()
 
-def add_to_column(cur, fednum, emrp_name, column, value):
+def add_to_column(cur, fed_num, emrp_name, column, value):
     """
     Adds 'value' to 'column' in cleanpoll table.
 
@@ -38,21 +38,21 @@ def add_to_column(cur, fednum, emrp_name, column, value):
         return
     # SQL injection: use column as column name
     query = "UPDATE cleanpoll SET " + column + " = " + column + \
-            " + %(value)s WHERE fednum = %(fednum)s AND emrp_name = %(emrp_name)s;"
+            " + %(value)s WHERE fed_num = %(fed_num)s AND emrp_name = %(emrp_name)s;"
     cur.execute(query,
-                { 'fednum' : fednum
+                { 'fed_num' : fed_num
                 , 'column' : column
                 , 'value' : value
                 , 'emrp_name' : emrp_name
                 })
 
-def get_psnums(cur, fednum, emrp_name):
+def get_psnums(cur, fed_num, emrp_name):
     """
     Get all polling station numbers from pollresults which
     should be combined into the row for emrp_name.
     """
     cur.execute("""SELECT array_agg(DISTINCT psnum) FROM pollresults WHERE
-                           ednum = %(fednum)s
+                           ednum = %(fed_num)s
                    AND NOT voidpoll
                    AND NOT nopoll
                    AND (   (   mergewith = ''
@@ -62,19 +62,19 @@ def get_psnums(cur, fednum, emrp_name):
                        );""",
                 { 'psnum' : emrp_name
                 , 'psnum_letter' : emrp_name + '_' # Matches, e.g., '26A'
-                , 'fednum' : fednum
+                , 'fed_num' : fed_num
                 })
     return cur.fetchone()[0]
 
-def process_poll(cur, fednum, emrp_name):
+def process_poll(cur, fed_num, emrp_name):
     """
     Adds a new entry to the cleanpoll table for the specified poll.
     """
     # Create row
-    cur.execute("INSERT INTO cleanpoll (fednum, emrp_name) VALUES (%s,%s)",
-                (fednum, emrp_name))
+    cur.execute("INSERT INTO cleanpoll (fed_num, emrp_name) VALUES (%s,%s)",
+                (fed_num, emrp_name))
 
-    psnums = get_psnums(cur, fednum, emrp_name)
+    psnums = get_psnums(cur, fed_num, emrp_name)
     # Map of party columns to search patterns
     parties = { 'libvotes' : '%Liberal%'
               , 'ndpvotes' : '%NDP%'
@@ -87,23 +87,23 @@ def process_poll(cur, fednum, emrp_name):
     # merging into the given poll.
     for party, partypattern in parties.items():
         cur.execute("""SELECT sum(votes) FROM pollresults WHERE
-                           ednum = %(fednum)s
+                           ednum = %(fed_num)s
                        AND psnum = ANY(%(psnums)s)
                        AND party_en LIKE %(partypattern)s;""",
-                    { 'fednum' : fednum
+                    { 'fed_num' : fed_num
                     , 'psnums' : psnums
                     , 'partypattern' : partypattern
                     })
         partyvotes, = cur.fetchone()
-        add_to_column(cur, fednum, emrp_name, party, partyvotes)
+        add_to_column(cur, fed_num, emrp_name, party, partyvotes)
         votetotals.append(partyvotes)
 
     # Find the number of votes for independent candidates.
     params = parties
-    params['fednum'] = fednum
+    params['fed_num'] = fed_num
     params['psnums'] = psnums
     cur.execute("""SELECT sum(votes) FROM pollresults WHERE
-                       ednum = %(fednum)s
+                       ednum = %(fed_num)s
                    AND psnum = ANY(%(psnums)s)
                    AND NOT (   party_en LIKE %(libvotes)s
                            OR  party_en LIKE %(convotes)s
@@ -113,21 +113,21 @@ def process_poll(cur, fednum, emrp_name):
                            )
                    ;""", params)
     othervotes, = cur.fetchone()
-    add_to_column(cur, fednum, emrp_name, 'othvotes', othervotes)
+    add_to_column(cur, fed_num, emrp_name, 'othvotes', othervotes)
     votetotals.append(othervotes)
 
     # Count electors
     cur.execute("""SELECT sum(electors) FROM (
                         SELECT DISTINCT psnum, electors FROM pollresults
-                        WHERE ednum = %(fednum)s AND psnum = ANY(%(psnums)s)
+                        WHERE ednum = %(fed_num)s AND psnum = ANY(%(psnums)s)
                    ) AS rows;""",
                 params);
     electors, = cur.fetchone()
-    add_to_column(cur, fednum, emrp_name, 'electors', electors)
+    add_to_column(cur, fed_num, emrp_name, 'electors', electors)
 
     # Calculate nonvoters
     nonvotes = electors - sum((x for x in votetotals if x))
-    add_to_column(cur, fednum, emrp_name, 'nonvotes', nonvotes)
+    add_to_column(cur, fed_num, emrp_name, 'nonvotes', nonvotes)
 
 
 
