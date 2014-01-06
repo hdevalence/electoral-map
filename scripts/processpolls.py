@@ -14,8 +14,7 @@ def create_cleanpoll():
     cur = conn.cursor()
     cur.execute("""CREATE TABLE cleanpoll ( fed_num integer
                                           , emrp_name character varying(31)
-                                          , pollname  character varying(255)
-                                          , valid boolean DEFAULT False
+                                          , pollname  character varying(1023)
                                           , electors integer DEFAULT 0
                                           , libvotes integer DEFAULT 0
                                           , convotes integer DEFAULT 0
@@ -75,6 +74,21 @@ def process_poll(cur, fed_num, emrp_name):
                 (fed_num, emrp_name))
 
     psnums = get_psnums(cur, fed_num, emrp_name)
+    if not psnums:
+        pollname = "No data"
+    elif len(psnums) == 1:
+        pollname = "Poll " + psnums[0]
+    else:
+        pollname = "Polls " + "+".join(psnums)
+    cur.execute("""UPDATE cleanpoll SET pollname = %(pollname)s WHERE
+                   fed_num = %(fed_num)s AND emrp_name = %(emrp_name)s;""",
+                { 'fed_num' : fed_num
+                , 'emrp_name' : emrp_name
+                , 'pollname' : pollname
+                })
+    if not psnums:
+        return # No data to process
+
     # Map of party columns to search patterns
     parties = { 'libvotes' : '%Liberal%'
               , 'ndpvotes' : '%NDP%'
