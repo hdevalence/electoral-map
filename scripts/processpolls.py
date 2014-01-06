@@ -76,6 +76,7 @@ def process_poll(cur, fednum, emrp_name):
               , 'blqvotes' : '%Bloc%'
               , 'grnvotes' : '%Green%'
               }
+    votetotals = []
     # For each party, calculate its vote total for all polls
     # merging into the given poll.
     for party, partypattern in parties.items():
@@ -89,6 +90,8 @@ def process_poll(cur, fednum, emrp_name):
                     })
         partyvotes, = cur.fetchone()
         add_votes(cur, fednum, emrp_name, party, partyvotes)
+        votetotals.append(partyvotes)
+
     # Find the number of votes for independent candidates.
     params = parties
     params['fednum'] = fednum
@@ -105,4 +108,21 @@ def process_poll(cur, fednum, emrp_name):
                    ;""", params)
     othervotes, = cur.fetchone()
     add_votes(cur, fednum, emrp_name, 'othvotes', othervotes)
+    votetotals.append(othervotes)
+
+    # Count electors
+    cur.execute("""SELECT sum(electors) FROM (
+                        SELECT DISTINCT psnum, electors FROM pollresults
+                        WHERE ednum = %(fednum)s AND psnum = ANY(%(psnums)s)
+                   ) AS rows;""",
+                params);
+    electors, = cur.fetchone()
+    add_votes(cur, fednum, emrp_name, 'electors', electors)
+
+    # Calculate nonvoters
+    nonvotes = electors - sum(votetotals)
+    add_votes(cur, fednum, emrp_name, 'nonvotes', nonvotes)
+
+
+
 
