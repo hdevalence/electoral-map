@@ -26,6 +26,10 @@ CREATE TABLE pollresults ( ednum integer
                          , votes integer
                          );
 
+CREATE INDEX pollresults_ednum_idx ON pollresults (ednum varchar_pattern_ops);
+CREATE INDEX pollresults_psnum_idx ON pollresults (psnum varchar_pattern_ops);
+CREATE INDEX pollresults_mergewith_idx ON pollresults (mergewith varchar_pattern_ops);
+
 \COPY pollresults FROM 'data/pollresults/pollresults_resultatsbureau10001.csv' CSV HEADER;
 \COPY pollresults FROM 'data/pollresults/pollresults_resultatsbureau10002.csv' CSV HEADER;
 \COPY pollresults FROM 'data/pollresults/pollresults_resultatsbureau10003.csv' CSV HEADER;

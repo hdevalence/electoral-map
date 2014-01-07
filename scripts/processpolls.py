@@ -24,6 +24,8 @@ def create_cleanpoll():
                                           , othvotes integer DEFAULT 0
                                           , nonvotes integer DEFAULT 0
                                           );""")
+    cur.execute("""CREATE INDEX cleanpoll_idx
+                   ON cleanpoll (fed_num, emrp_name varchar_pattern_ops);""")
     conn.commit()
 
 def add_to_column(cur, fed_num, emrp_name, column, value):
