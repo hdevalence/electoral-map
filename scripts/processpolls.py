@@ -28,7 +28,7 @@ def create_cleanpoll():
 
 def add_to_column(cur, fed_num, emrp_name, column, value):
     """
-    Adds 'value' to 'column' in cleanpoll table.
+    Adds 'value' to 'column' in the cleanpoll table.
 
     Note: This function uses the column parameter to build the query.
     Only call it with known inputs.
@@ -36,8 +36,8 @@ def add_to_column(cur, fed_num, emrp_name, column, value):
     if not value:
         return
     # SQL injection: use column as column name
-    query = "UPDATE cleanpoll SET " + column + " = " + column + \
-            " + %(value)s WHERE fed_num = %(fed_num)s AND emrp_name = %(emrp_name)s;"
+    query = "UPDATE cleanpoll SET " + column + " = " + column + """ + %(value)s
+             WHERE fed_num = %(fed_num)s AND emrp_name = %(emrp_name)s;"""
     cur.execute(query,
                 { 'fed_num' : fed_num
                 , 'column' : column
@@ -193,11 +193,18 @@ def add_advance_poll(cur, fed_num, adv_poll, emrp_names):
     # Add votes to totals
     for emrp_name, electors in component_polls:
         share = float(electors)/total
-        for i, colname in enumerate(['electors', 'libvotes', 'convotes', 'ndpvotes',
-                                     'blqvotes', 'grnvotes', 'othvotes', 'nonvotes']):
-            # Note: possible source of rounding error: we truncate, so we may lose
-            # a few votes (< 1 per component poll in the cracks.
-            add_to_column(cur, fed_num, emrp_name, colname, int(share*adv_data[i]))
+        for i, col in enumerate([ 'electors'
+                                , 'libvotes'
+                                , 'convotes'
+                                , 'ndpvotes'
+                                , 'blqvotes'
+                                , 'grnvotes'
+                                , 'othvotes'
+                                , 'nonvotes'
+                                ]):
+            # Note: possible source of rounding error: we truncate, so we may
+            # lose a few votes (< 1 per component poll) in the cracks.
+            add_to_column(cur, fed_num, emrp_name, col, int(share*adv_data[i]))
 
     # Remove column for advance poll
     cur.execute("""DELETE FROM cleanpoll WHERE emrp_name = %s AND fed_num = %s;""",
