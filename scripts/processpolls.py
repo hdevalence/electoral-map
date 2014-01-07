@@ -135,7 +135,7 @@ def process_poll(cur, fed_num, emrp_name):
                         SELECT DISTINCT psnum, electors FROM pollresults
                         WHERE ednum = %(fed_num)s AND psnum = ANY(%(psnums)s)
                    ) AS rows;""",
-                params);
+                params)
     electors, = cur.fetchone()
     add_to_column(cur, fed_num, emrp_name, 'electors', electors)
 
@@ -160,4 +160,62 @@ def process_all_polls():
     for fed_num, emrp_name in polls:
         process_poll(cur, fed_num, emrp_name)
 
+def add_advance_poll(cur, fed_num, adv_poll, emrp_names):
+    """
+    Account for voters in the advance poll adv_poll,
+    which incorporates the polls in emrp_names.
 
+    We have no way of knowing which polls the voters came from,
+    so we assume a uniform distribution on the source polls.
+
+    This is probably flawed: more thought needed.
+    """
+    # Calculate totals for the advance poll and add them to the cleanpoll table.
+    process_poll(cur, fed_num, adv_poll)
+    cur.execute("""SELECT electors, libvotes, convotes, ndpvotes,
+                          blqvotes, grnvotes, othvotes, nonvotes
+                   FROM cleanpoll WHERE emrp_name = %s
+                                    AND fed_num = %s""",
+                (adv_poll, fed_num))
+    adv_data = cur.fetchone()
+
+    # Calculate shares of advance vote in proportion to number of electors.
+    cur.execute("""SELECT emrp_name, electors FROM cleanpoll
+                   WHERE emrp_name = ANY(%(emrp_names)s)
+                     AND fed_num = %(fed_num)s
+                     AND electors > 0;""",
+                { 'emrp_names' : emrp_names
+                , 'fed_num' : fed_num
+                })
+    component_polls = cur.fetchall()
+    total = sum((e for _,e in component_polls))
+
+    # Add votes to totals
+    for emrp_name, electors in component_polls:
+        share = float(electors)/total
+        for i,colname in enumerate(['electors', 'libvotes', 'convotes', 'ndpvotes',
+                                    'blqvotes', 'grnvotes', 'othvotes', 'nonvotes']):
+            # Note: possible source of rounding error: we truncate, so we may lose
+            # a few votes (< 1 per component poll in the cracks.
+            add_to_column(cur, fed_num, emrp_name, colname, int(share*adv_data[i]))
+
+    # Remove column for advance poll
+    cur.execute("""DELETE FROM cleanpoll WHERE emrp_name = %s AND fed_num = %s;""",
+                (adv_poll, fed_num))
+
+    cur.connection.commit()
+
+def add_all_advance_polls():
+    """
+    Maps add_advance_poll over needed database entries.
+    """
+    cur = conn.cursor()
+    cur.execute("""SELECT fed_num, adv_poll, array_agg(DISTINCT emrp_name)
+                   FROM (     (SELECT fed_num, adv_poll, emrp_name FROM pd_a)
+                        UNION (SELECT fed_num, adv_poll, emrp_name FROM pd_p)
+                        ) AS rows
+                   GROUP BY fed_num, adv_poll;""")
+    # probably less than efficient to get all results at once...
+    advancepolls = cur.fetchall()
+    for fed_num, adv_poll, emrp_names in advancepolls:
+        add_advance_poll(cur, fed_num, adv_poll, emrp_names)
