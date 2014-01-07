@@ -70,7 +70,7 @@ def process_poll(cur, fed_num, emrp_name):
     Adds a new entry to the cleanpoll table for the specified poll.
     """
     # Create row
-    cur.execute("INSERT INTO cleanpoll (fed_num, emrp_name) VALUES (%s,%s)",
+    cur.execute("INSERT INTO cleanpoll (fed_num, emrp_name) VALUES (%s, %s)",
                 (fed_num, emrp_name))
 
     psnums = get_psnums(cur, fed_num, emrp_name)
@@ -188,13 +188,13 @@ def add_advance_poll(cur, fed_num, adv_poll, emrp_names):
                 , 'fed_num' : fed_num
                 })
     component_polls = cur.fetchall()
-    total = sum((e for _,e in component_polls))
+    total = sum((e for _, e in component_polls))
 
     # Add votes to totals
     for emrp_name, electors in component_polls:
         share = float(electors)/total
-        for i,colname in enumerate(['electors', 'libvotes', 'convotes', 'ndpvotes',
-                                    'blqvotes', 'grnvotes', 'othvotes', 'nonvotes']):
+        for i, colname in enumerate(['electors', 'libvotes', 'convotes', 'ndpvotes',
+                                     'blqvotes', 'grnvotes', 'othvotes', 'nonvotes']):
             # Note: possible source of rounding error: we truncate, so we may lose
             # a few votes (< 1 per component poll in the cracks.
             add_to_column(cur, fed_num, emrp_name, colname, int(share*adv_data[i]))
