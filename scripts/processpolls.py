@@ -154,10 +154,12 @@ def process_all_polls():
     to get the cleaned data
     """
     cur = conn.cursor()
-    cur.execute("""SELECT fed_num, emrp_name FROM pd_a;""")
+    cur.execute("""( SELECT fed_num, emrp_name FROM pd_a
+                     GROUP BY fed_num, emrp_name
+                   ) UNION ( SELECT fed_num, emrp_name FROM pd_a
+                             GROUP BY fed_num, emrp_name
+                   );""")
     polls = cur.fetchall()
-    cur.execute("""SELECT fed_num, emrp_name FROM pd_p;""")
-    polls += cur.fetchall()
     print(len(polls))
     for fed_num, emrp_name in polls:
         process_poll(cur, fed_num, emrp_name)
