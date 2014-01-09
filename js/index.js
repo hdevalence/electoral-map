@@ -381,8 +381,16 @@ var colors = libcolors;
 
 var getColor = function(val) {
     "use strict";
-    // TODO: pick based on percentiles.
-    return colors[Math.floor(val*8)];
+    // Calculated with scripts/percentile.py
+    return  val < 0.050102 ? colors[0] :
+            val < 0.087357 ? colors[1] :
+            val < 0.130092 ? colors[2] :
+            val < 0.178238 ? colors[3] :
+            val < 0.233873 ? colors[4] :
+            val < 0.293547 ? colors[5] :
+            val < 0.354185 ? colors[6] :
+            val < 0.427807 ? colors[7] :
+                             colors[8];
 };
 
 var getOpacity = function(props) {
