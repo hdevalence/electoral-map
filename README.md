@@ -41,6 +41,4 @@ TODO
 *   Automate data processing
 *   Add single-building polls
 *   Fix advance poll handling
-*   Fix height of map div: can't be 100% or it overflows because 
-    of the header. JS resizing is probably the best bet. CSS height is icky.
 

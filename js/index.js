@@ -547,6 +547,9 @@ var showvotes = function(key) {
 };
 
 var init = function() {
+    // Set map height
+    $('#map').height($(document).height() - $('#topnav').height() -1);
+
     // Set up riding search typeahead
     //
     // 1. Create list of riding names
