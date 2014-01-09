@@ -314,12 +314,75 @@ for( var fed_name in fed_nums ) {
     fed_names[fed_nums[fed_name]] = fed_name;
 }
 
-var showvotes = function(key) {
-    if( $('li.' + key).hasClass('active') ) {
-        return;
-    }
-    $('li.active').toggleClass('active');
-    $('li.' + key).toggleClass('active');
+var libcolors = [ '#fff5f0'
+                , '#fee0d2'
+                , '#fcbba1'
+                , '#fc9272'
+                , '#fb6a4a'
+                , '#ef3b2c'
+                , '#cb181d'
+                , '#a50f15'
+                , '#67000d'
+                ];
+
+var grncolors = [ '#f7fcf5'
+                , '#e5f5e0'
+                , '#c7e9c0'
+                , '#a1d99b'
+                , '#74c476'
+                , '#41ab5d'
+                , '#238b45'
+                , '#006d2c'
+                , '#00441b'
+                ];
+
+var ndpcolors = [ '#fff5eb'
+                , '#fee6ce'
+                , '#fdd0a2'
+                , '#fdae6b'
+                , '#fd8d3c'
+                , '#f16913'
+                , '#d94801'
+                , '#a63603'
+                , '#7f2704'
+                ];
+
+var concolors = [ '#f7fbff'
+                , '#deebf7'
+                , '#c6dbef'
+                , '#9ecae1'
+                , '#6baed6'
+                , '#4292c6'
+                , '#2171b5'
+                , '#08519c'
+                , '#08306b'
+                ];
+var blqcolors = concolors; // both blue. TODO: use different blues.
+
+var noncolors = [ '#ffffff'
+                , '#f0f0f0'
+                , '#d9d9d9'
+                , '#bdbdbd'
+                , '#969696'
+                , '#737373'
+                , '#525252'
+                , '#252525'
+                , '#000000'
+                ];
+
+var partyColors = { 'libvotes':libcolors
+                  , 'convotes':concolors
+                  , 'nonvotes':noncolors
+                  , 'ndpvotes':ndpcolors
+                  , 'grnvotes':grncolors
+                  , 'blqvotes':blqcolors
+                  };
+
+var curVoteDisplay = 'libvotes';
+var colors = libcolors;
+
+var getColor = function(val) {
+    return colors[Math.floor(val*8)];
 }
 
 var featureStyle = function(feature) {
@@ -327,14 +390,15 @@ var featureStyle = function(feature) {
            , opacity: 1
            , color: 'white'
            , dashArray: '3'
-           , fillOpacity: '0.5'
-           , fillColor: '#FFEDA0'
+           , fillOpacity: '0.8'
+           , fillColor: getColor(feature.properties[curVoteDisplay])
            };
 }
 
 var map = L.map('map').setView([55, -96], 4);
 
 var loadedRidings = [];
+var ridingLayers = {};
 
 var loadRiding = function(ridingname) {
     var fed_num = fed_nums[ridingname];
@@ -345,8 +409,24 @@ var loadRiding = function(ridingname) {
     console.log('ID ' + fed_num);
     loadedRidings.push(fed_num);
     $.getJSON("geojson/" + fed_num + ".geojson", function(data) {
-        L.geoJson(data).addTo(map);
+        currentData = data;
+        var layer = L.geoJson(currentData, {style:featureStyle});
+        ridingLayers[fed_num] = layer;
+        layer.addTo(map);
     });
+}
+
+var showvotes = function(key) {
+    if( $('li.' + key).hasClass('active') ) {
+        return;
+    }
+    $('li.active').toggleClass('active');
+    $('li.' + key).toggleClass('active');
+    curVoteDisplay = key;
+    colors = partyColors[key];
+    for( var fed_num in ridingLayers) {
+        ridingLayers[fed_num].setStyle(featureStyle);
+    }
 }
 
 var init = function() {
