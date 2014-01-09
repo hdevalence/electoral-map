@@ -468,7 +468,7 @@ var loadRiding = function(ridingname) {
     console.log('Loading data for ' + ridingname);
     console.log('ID ' + fed_num);
     loadedRidings.push(fed_num);
-    $.getJSON("geojson/" + fed_num + ".geojson", function(data) {
+    $.getJSON("./geojson/" + fed_num + ".geojson", function(data) {
         currentData = data;
         var layer = L.geoJson(currentData, { style: featureStyle
                                            , onEachFeature : function(feature, layer) {
