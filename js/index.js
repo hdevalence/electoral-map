@@ -445,7 +445,8 @@ info.update = function(props) {
                             + '      <td>Nonvoters</td><td>' + (props.nonvotes*100).toFixed(2) + '%</td>'
                             + '    </tr>'
                             + '  </tbody>'
-                            + '</table>';
+                            + '</table>'
+                            + '<span>Numbers look weird? See the FAQ.</span>';
     } else {
         this._div.innerHTML = '<span>Hover over a poll</span>';
     }
