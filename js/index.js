@@ -385,12 +385,22 @@ var getColor = function(val) {
     return colors[Math.floor(val*8)];
 }
 
+var getOpacity = function(props) {
+    console.log(props);
+    if( props.libvotes == 0 && props.convotes == 0 && props.nonvotes == 0 ) {
+        console.log("zero");
+        return 0;
+    } else {
+        return 0.7;
+    }
+}
+
 var featureStyle = function(feature) {
     return { weight: 1
            , opacity: 1
            , color: 'white'
            , dashArray: '3'
-           , fillOpacity: '0.8'
+           , fillOpacity: getOpacity(feature.properties)
            , fillColor: getColor(feature.properties[curVoteDisplay])
            };
 }
