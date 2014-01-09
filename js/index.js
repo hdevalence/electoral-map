@@ -397,6 +397,45 @@ var featureStyle = function(feature) {
 
 var map = L.map('map').setView([55, -96], 4);
 
+var info = L.control();
+info.onAdd = function(map) {
+    this._div = L.DomUtil.create('div', 'info'); // div.info
+    this.update();
+    return this._div;
+};
+
+info.update = function(props) {
+    if(props) {
+        this._div.innerHTML = '<span>Poll ' + props.emrp_name + '</span>'
+                            + '<table class="table">'
+                            + '  <tbody>'
+                            + '    <tr>'
+                            + '      <td>Liberal</td><td>' + (props.libvotes*100).toFixed(2) + '%</td>'
+                            + '    </tr>'
+                            + '    <tr>'
+                            + '      <td>Conservative</td><td>' + (props.convotes*100).toFixed(2) + '%</td>'
+                            + '    </tr>'
+                            + '    <tr>'
+                            + '      <td>NDP</td><td>' + (props.ndpvotes*100).toFixed(2) + '%</td>'
+                            + '    </tr>'
+                            + '    <tr>'
+                            + '      <td>Bloc</td><td>' + (props.blqvotes*100).toFixed(2) + '%</td>'
+                            + '    </tr>'
+                            + '    <tr>'
+                            + '      <td>Green</td><td>' + (props.grnvotes*100).toFixed(2) + '%</td>'
+                            + '    </tr>'
+                            + '    <tr>'
+                            + '      <td>Nonvoters</td><td>' + (props.nonvotes*100).toFixed(2) + '%</td>'
+                            + '    </tr>'
+                            + '  </tbody>'
+                            + '</table>';
+    } else {
+        this._div.innerHTML = '<span>Hover over a poll</span>';
+    }
+};
+
+info.addTo(map);
+
 var highlightFeature = function(e) {
     var layer = e.target;
     layer.setStyle({ weight: 3
@@ -405,18 +444,19 @@ var highlightFeature = function(e) {
     if(!L.Browser.ie && !L.Browser.opera) {
         layer.bringToFront();
     }
+    info.update(layer.feature.properties);
 }
 
 var resetHighlight = function(e) {
     for( var fed_num in ridingLayers) {
         ridingLayers[fed_num].resetStyle(e.target);
     }
+    info.update();
 }
 
 var zoomToFeature = function(e) {
     map.fitBounds(e.target.getBounds());
 }
-
 var loadedRidings = [];
 var ridingLayers = {};
 
