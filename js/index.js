@@ -406,7 +406,7 @@ info.onAdd = function(map) {
 
 info.update = function(props) {
     if(props) {
-        this._div.innerHTML = '<span>Poll ' + props.emrp_name + '</span>'
+        this._div.innerHTML = '<span>' + props.pollname + '</span>'
                             + '<table class="table">'
                             + '  <tbody>'
                             + '    <tr>'

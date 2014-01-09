@@ -14,7 +14,7 @@ SELECT Populate_Geometry_Columns();
 CREATE TABLE merged_pd_a AS
 SELECT cleaned_pd_a.geom
      , cleanpoll.fed_num
-     , cleanpoll.emrp_name
+     , cleanpoll.pollname
      , cleanpoll.libvotes / (cleanpoll.electors::float + 0.1) AS libvotes
      , cleanpoll.convotes / (cleanpoll.electors::float + 0.1) AS convotes
      , cleanpoll.ndpvotes / (cleanpoll.electors::float + 0.1) AS ndpvotes
