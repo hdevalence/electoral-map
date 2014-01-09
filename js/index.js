@@ -310,8 +310,10 @@ var fed_nums = { "Avalon" : 10001
 
 // Lookup name by ID
 var fed_names = {};
-for( var fed_name in fed_nums ) {
-    fed_names[fed_nums[fed_name]] = fed_name;
+for (var fed_name in fed_nums) {
+    if (fed_nums.hasOwnProperty(fed_name)) {
+        fed_names[fed_nums[fed_name]] = fed_name;
+    }
 }
 
 var libcolors = [ '#fff5f0'
@@ -324,7 +326,6 @@ var libcolors = [ '#fff5f0'
                 , '#a50f15'
                 , '#67000d'
                 ];
-
 var grncolors = [ '#f7fcf5'
                 , '#e5f5e0'
                 , '#c7e9c0'
@@ -335,7 +336,6 @@ var grncolors = [ '#f7fcf5'
                 , '#006d2c'
                 , '#00441b'
                 ];
-
 var ndpcolors = [ '#fff5eb'
                 , '#fee6ce'
                 , '#fdd0a2'
@@ -346,7 +346,6 @@ var ndpcolors = [ '#fff5eb'
                 , '#a63603'
                 , '#7f2704'
                 ];
-
 var concolors = [ '#f7fbff'
                 , '#deebf7'
                 , '#c6dbef'
@@ -358,7 +357,6 @@ var concolors = [ '#f7fbff'
                 , '#08306b'
                 ];
 var blqcolors = concolors; // both blue. TODO: use different blues.
-
 var noncolors = [ '#ffffff'
                 , '#f0f0f0'
                 , '#d9d9d9'
@@ -382,20 +380,23 @@ var curVoteDisplay = 'libvotes';
 var colors = libcolors;
 
 var getColor = function(val) {
+    "use strict";
+    // TODO: pick based on percentiles.
     return colors[Math.floor(val*8)];
-}
+};
 
 var getOpacity = function(props) {
-    console.log(props);
-    if( props.libvotes == 0 && props.convotes == 0 && props.nonvotes == 0 ) {
-        console.log("zero");
+    "use strict";
+    // If there's no data for the poll, let it be transparent.
+    if( props.libvotes === 0 && props.convotes === 0 && props.nonvotes === 0 ) {
         return 0;
     } else {
         return 0.7;
     }
-}
+};
 
 var featureStyle = function(feature) {
+    "use strict";
     return { weight: 1
            , opacity: 1
            , color: 'white'
@@ -403,18 +404,24 @@ var featureStyle = function(feature) {
            , fillOpacity: getOpacity(feature.properties)
            , fillColor: getColor(feature.properties[curVoteDisplay])
            };
-}
+};
 
 var map = L.map('map').setView([55, -96], 4);
 
 var info = L.control();
 info.onAdd = function(map) {
+    "use strict";
     this._div = L.DomUtil.create('div', 'info'); // div.info
     this.update();
     return this._div;
 };
 
+/*
+ * Update the info box based on the feature's properties.
+ * Makes a little table of voting info.
+ */
 info.update = function(props) {
+    "use strict";
     if(props) {
         this._div.innerHTML = '<span>' + props.pollname + '</span>'
                             + '<table class="table">'
@@ -447,97 +454,135 @@ info.update = function(props) {
 info.addTo(map);
 
 var highlightFeature = function(e) {
+    "use strict";
     var layer = e.target;
     layer.setStyle({ weight: 3
                    , color: '#222'
                    });
+    // According to Leaflet, IE and Opera have issues.
     if(!L.Browser.ie && !L.Browser.opera) {
         layer.bringToFront();
     }
     info.update(layer.feature.properties);
-}
+};
 
 var resetHighlight = function(e) {
-    for( var fed_num in ridingLayers) {
-        ridingLayers[fed_num].resetStyle(e.target);
+    "use strict";
+    for (var fed_num in ridingLayers) {
+        if (ridingLayers.hasOwnProperty(fed_num)) {
+            ridingLayers[fed_num].resetStyle(e.target);
+        }
     }
     info.update();
-}
+};
 
 var zoomToFeature = function(e) {
+    "use strict";
     map.fitBounds(e.target.getBounds());
-}
+};
+
+/*
+ * Array to keep a list of IDs of ridings we've loaded already,
+ * to prevent double-loading.
+ */
 var loadedRidings = [];
+
+/*
+ * Hash of layers corresponding to riding IDs, so that we can
+ * redraw all layers on changing e.g., the party selection.
+ */
 var ridingLayers = {};
 
+/*
+ * Load a riding's GeoJSON data by name.
+ */
 var loadRiding = function(ridingname) {
+    "use strict";
+    // Look up the id by name and check if we've loaded it.
     var fed_num = fed_nums[ridingname];
     if( $.inArray(fed_num, loadedRidings) >= 0 ) {
         return;
     }
     console.log('Loading data for ' + ridingname);
     console.log('ID ' + fed_num);
+    // Add the id to the list of loaded ridings...
     loadedRidings.push(fed_num);
+    // and then load it
     $.getJSON("./geojson/" + fed_num + ".geojson", function(data) {
-        currentData = data;
-        var layer = L.geoJson(currentData, { style: featureStyle
-                                           , onEachFeature : function(feature, layer) {
-                                                 layer.on({ mouseover: highlightFeature
-                                                          , mouseout: resetHighlight
-                                                          , click: zoomToFeature
-                                                          });
-                                             }
-                                           });
+        // Make a layer with certain styling
+        var layer = L.geoJson(data, { style: featureStyle
+                                    , onEachFeature : function(feature, layer) {
+                                          layer.on({ mouseover: highlightFeature
+                                                   , mouseout: resetHighlight
+                                                   , click: zoomToFeature
+                                                   });
+                                      }
+                                    });
+        // Then add it to the layer list and the map.
         ridingLayers[fed_num] = layer;
         layer.addTo(map);
         map.fitBounds(layer.getBounds());
     });
-}
+};
 
+/*
+ * Sets the map to display the vote share of a given party.
+ * The key should be one of the identifiers like libvotes, convotes, etc.
+ */
 var showvotes = function(key) {
-    if( $('li.' + key).hasClass('active') ) {
+    "use strict";
+    if ($('li.' + key).hasClass('active')) {
         return;
     }
     $('li.active').toggleClass('active');
     $('li.' + key).toggleClass('active');
     curVoteDisplay = key;
     colors = partyColors[key];
-    for( var fed_num in ridingLayers) {
-        ridingLayers[fed_num].setStyle(featureStyle);
+    for (var fed_num in ridingLayers) {
+        if (ridingLayers.hasOwnProperty(fed_num)) {
+            ridingLayers[fed_num].setStyle(featureStyle);
+        }
     }
-}
+};
 
 var init = function() {
-    console.log("init");
-    var ridingnames = []
-    for( var name in fed_nums ) {
-        ridingnames.push(name);
+    // Set up riding search typeahead
+    //
+    // 1. Create list of riding names
+    var ridingnames = [];
+    for (var name in fed_nums) {
+        if (fed_nums.hasOwnProperty(name)) {
+            ridingnames.push(name);
+        }
     }
-    $('#ridingselector').typeahead({
-      name: 'ridingselector'
-    //, prefetch: 'js/ridingnames.json'
-    , local: ridingnames
-    , limit: 10
+    // 2. Initialise typeahead
+    $('#ridingselector').typeahead({ name: 'ridingselector'
+                                   , local: ridingnames
+                                   , limit: 10
+                                   });
+    // 3. Handle form submission
+    $('#ridingform').submit(function() {
+        var ridingname = $('#ridingselector').val();
+        loadRiding(ridingname);
     });
+
+    // Set up party display buttons
     $('a.libvotes').click(function() { showvotes('libvotes'); });
     $('a.convotes').click(function() { showvotes('convotes'); });
     $('a.ndpvotes').click(function() { showvotes('ndpvotes'); });
     $('a.grnvotes').click(function() { showvotes('grnvotes'); });
     $('a.blqvotes').click(function() { showvotes('blqvotes'); });
     $('a.nonvotes').click(function() { showvotes('nonvotes'); });
+    // Show liberal by default
     showvotes('libvotes');
 
-    var cloudmade = L.tileLayer('http://{s}.tile.cloudmade.com/{key}/{styleId}/256/{z}/{x}/{y}.png', {
-            attribution: 'Map data &copy; 2014 OpenStreetMap contributors, Imagery &copy; 2014 CloudMade',
-            key: 'eac577c37d044effb60b51bfa45606ca',
-            styleId: 22677
-    }).addTo(map);
-
-    $('#ridingform').submit(function() {
-        var ridingname = $('#ridingselector').val();
-        loadRiding(ridingname);
-    });
-
+    // Add OSM tilelayer to map
+    L.tileLayer( 'http://{s}.tile.cloudmade.com/{key}/{styleId}/256/{z}/{x}/{y}.png'
+               , { attribution: 'Map data &copy; 2014 OpenStreetMap contributors, Imagery &copy; 2014 CloudMade'
+                 , key: 'eac577c37d044effb60b51bfa45606ca'
+                 , styleId: 22677
+                 }
+               ).addTo(map);
 };
 
 window.onload = init;
