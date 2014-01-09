@@ -334,10 +334,16 @@ var featureStyle = function(feature) {
 
 var map = L.map('map').setView([55, -96], 4);
 
+var loadedRidings = [];
+
 var loadRiding = function(ridingname) {
     var fed_num = fed_nums[ridingname];
+    if( $.inArray(fed_num, loadedRidings) >= 0 ) {
+        return;
+    }
     console.log('Loading data for ' + ridingname);
     console.log('ID ' + fed_num);
+    loadedRidings.push(fed_num);
     $.getJSON("geojson/" + fed_num + ".geojson", function(data) {
         L.geoJson(data).addTo(map);
     });
