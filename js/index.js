@@ -397,6 +397,26 @@ var featureStyle = function(feature) {
 
 var map = L.map('map').setView([55, -96], 4);
 
+var highlightFeature = function(e) {
+    var layer = e.target;
+    layer.setStyle({ weight: 3
+                   , color: '#222'
+                   });
+    if(!L.Browser.ie && !L.Browser.opera) {
+        layer.bringToFront();
+    }
+}
+
+var resetHighlight = function(e) {
+    for( var fed_num in ridingLayers) {
+        ridingLayers[fed_num].resetStyle(e.target);
+    }
+}
+
+var zoomToFeature = function(e) {
+    map.fitBounds(e.target.getBounds());
+}
+
 var loadedRidings = [];
 var ridingLayers = {};
 
@@ -410,9 +430,17 @@ var loadRiding = function(ridingname) {
     loadedRidings.push(fed_num);
     $.getJSON("geojson/" + fed_num + ".geojson", function(data) {
         currentData = data;
-        var layer = L.geoJson(currentData, {style:featureStyle});
+        var layer = L.geoJson(currentData, { style: featureStyle
+                                           , onEachFeature : function(feature, layer) {
+                                                 layer.on({ mouseover: highlightFeature
+                                                          , mouseout: resetHighlight
+                                                          , click: zoomToFeature
+                                                          });
+                                             }
+                                           });
         ridingLayers[fed_num] = layer;
         layer.addTo(map);
+        map.fitBounds(layer.getBounds());
     });
 }
 
