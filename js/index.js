@@ -316,6 +316,8 @@ var showvotes = function(key) {
     $('li.' + key).toggleClass('active');
 }
 
+var map = L.map('map').setView([55, -96], 4);
+
 var init = function() {
     console.log("init");
     var ridingnames = []
@@ -335,6 +337,13 @@ var init = function() {
     $('a.blqvotes').click(function() { showvotes('blqvotes'); });
     $('a.nonvotes').click(function() { showvotes('nonvotes'); });
     showvotes('libvotes');
+
+    var cloudmade = L.tileLayer('http://{s}.tile.cloudmade.com/{key}/{styleId}/256/{z}/{x}/{y}.png', {
+            attribution: 'Map data &copy; 2014 OpenStreetMap contributors, Imagery &copy; 2014 CloudMade',
+            key: 'eac577c37d044effb60b51bfa45606ca',
+            styleId: 22677
+    }).addTo(map);
+
 };
 
 window.onload = init;
