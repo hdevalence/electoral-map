@@ -308,6 +308,12 @@ var fed_nums = { "Avalon" : 10001
                , "Nunavut" : 62001
                };
 
+// Lookup name by ID
+var fed_names = {};
+for( var fed_name in fed_nums ) {
+    fed_names[fed_nums[fed_name]] = fed_name;
+}
+
 var showvotes = function(key) {
     if( $('li.' + key).hasClass('active') ) {
         return;
@@ -316,7 +322,26 @@ var showvotes = function(key) {
     $('li.' + key).toggleClass('active');
 }
 
+var featureStyle = function(feature) {
+    return { weight: 1
+           , opacity: 1
+           , color: 'white'
+           , dashArray: '3'
+           , fillOpacity: '0.5'
+           , fillColor: '#FFEDA0'
+           };
+}
+
 var map = L.map('map').setView([55, -96], 4);
+
+var loadRiding = function(ridingname) {
+    var fed_num = fed_nums[ridingname];
+    console.log('Loading data for ' + ridingname);
+    console.log('ID ' + fed_num);
+    $.getJSON("geojson/" + fed_num + ".geojson", function(data) {
+        L.geoJson(data).addTo(map);
+    });
+}
 
 var init = function() {
     console.log("init");
@@ -343,6 +368,11 @@ var init = function() {
             key: 'eac577c37d044effb60b51bfa45606ca',
             styleId: 22677
     }).addTo(map);
+
+    $('#ridingform').submit(function() {
+        var ridingname = $('#ridingselector').val();
+        loadRiding(ridingname);
+    });
 
 };
 
