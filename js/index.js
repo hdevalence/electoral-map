@@ -600,6 +600,9 @@ var init = function() {
         var ridingname = $('#ridingselector').val();
         loadRiding(ridingname);
     });
+    $("#ridingselector").on("typeahead:selected", function() {
+        $("#ridingsubmit").click()
+    });
 
     // Set up party display buttons
     $('a.libvotes').click(function() { showvotes('libvotes'); });
