@@ -419,7 +419,7 @@ var map = L.map('map').setView([55, -96], 4);
 var info = L.control();
 info.onAdd = function(map) {
     "use strict";
-    this._div = L.DomUtil.create('div', 'info'); // div.info
+    this._div = L.DomUtil.create('div', 'map-overlay');
     this.update();
     return this._div;
 };
@@ -461,6 +461,26 @@ info.update = function(props) {
 };
 
 info.addTo(map);
+
+var legend = L.control({position: 'bottomright'});
+legend.update = function() {
+    var percentiles = [11, 22, 33, 44, 55, 66, 77, 88, 100];
+    var labels = [];
+    this._div.innerHTML = "";
+    for (var i = 0; i < percentiles.length; i++) {
+        this._div.innerHTML += '<i style="background:' + colors[i] + '"></i> '
+                             + percentiles[i]
+                             + (percentiles[i] === 33 ? 'rd percentile<br/>' :
+                                percentiles[i] === 22 ? 'nd percentile<br/>' :
+                                                        'th percentile<br/>');
+    }
+};
+legend.onAdd = function(map) {
+    this._div = L.DomUtil.create('div', 'map-overlay legend');
+    this.update();
+    return this._div;
+};
+legend.addTo(map);
 
 var highlightFeature = function(e) {
     "use strict";
@@ -552,6 +572,7 @@ var showvotes = function(key) {
             ridingLayers[fed_num].setStyle(featureStyle);
         }
     }
+    legend.update();
 };
 
 var init = function() {
