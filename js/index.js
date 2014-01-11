@@ -461,6 +461,8 @@ info.update = function(props) {
 };
 
 info.addTo(map);
+// Gets overwritten after a layer is added
+info._div.innerHTML = '<span>Add a riding to the map</span>';
 
 var legend = L.control({position: 'bottomright'});
 legend.update = function() {
@@ -552,6 +554,7 @@ var loadRiding = function(ridingname) {
         layer.addTo(map);
         map.fitBounds(layer.getBounds());
     });
+    info.update();
 };
 
 /*
