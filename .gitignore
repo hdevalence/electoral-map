@@ -1,3 +1,6 @@
+# Directory for compiled site
+_site
+
 *.py[cod]
 
 # C extensions
