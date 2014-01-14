@@ -2,12 +2,16 @@
 
 all:
 
-build:
+geojson:
+	mkdir -p _site/geojson
+	./scripts/export_all_to_geojson.sh _site/geojson/
+
+html:
 	mkdir -p _site
-	rsync -avP dist geojson js index.html _site
+	cp -av dist js index.html _site
 
 clean:
-	rm -rf _site
+	rm -rfv _site
 
 deploy:
 	#TODO: gzip files
