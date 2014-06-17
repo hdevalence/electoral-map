@@ -618,10 +618,9 @@ var init = function() {
     showvotes('libvotes');
 
     // Add OSM tilelayer to map
-    L.tileLayer( 'http://{s}.tile.cloudmade.com/{key}/{styleId}/256/{z}/{x}/{y}.png'
-               , { attribution: 'Map data &copy; 2014 OpenStreetMap contributors, Imagery &copy; 2014 CloudMade'
-                 , key: 'eac577c37d044effb60b51bfa45606ca'
-                 , styleId: 22677
+    L.tileLayer( 'https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png'
+               , { attribution: 'Map data &copy; 2014 OpenStreetMap contributors, Imagery &copy; 2014 Mapbox'
+                 , id: 'examples.map-20v6611k' /* TODO: check quotas on example tilesets */
                  }
                ).addTo(map);
 };
